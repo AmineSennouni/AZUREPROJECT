@@ -25,3 +25,4 @@ secrets.*
 # Terraform/CI (si ajoutés plus tard)
 .terraform/
 *.tfstate*
+adf/arm_template/parameters.local.json
