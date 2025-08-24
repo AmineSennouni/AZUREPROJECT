@@ -1,0 +1,27 @@
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.code-workspace
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Envs & secrets
+.env
+.env.*
+secrets.*
+*.secret.*
+*.key
+*.pem
+
+# Archives / exports lourds
+*.zip
+*.dbc
+
+# Terraform/CI (si ajoutés plus tard)
+.terraform/
+*.tfstate*

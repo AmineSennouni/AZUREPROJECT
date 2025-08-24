@@ -1,0 +1,19 @@
+storage_account: stmystack4858
+containers:
+  raw: raw
+  silver: silver
+  gold: gold
+paths:
+  silver_bronze: "abfss://silver@stmystack4858.dfs.core.windows.net/bronze"
+  gold_curated: "abfss://gold@stmystack4858.dfs.core.windows.net/curated"
+spark:
+  dbr: "16.4 LTS"
+  spark_version: "3.5.2"
+adf:
+  pipeline_names:
+    - Ingest_Raw
+    - Clean_Data
+    - Transform_curated
+trigger:
+  type: "Storage events (Event Grid)"
+  filter: "*.csv"
