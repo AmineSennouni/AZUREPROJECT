@@ -1,4 +1,4 @@
-EDF Paris — Lakehouse ADF + Databricks + ADLS (Raw/Silver/Gold)
+PROJECT Lakehouse ADF + Databricks + ADLS (Raw/Silver/Gold)
 
 Statut : dépôt public de démonstration — aucun secret, infra non active (subscription Azure désactivée).
 
