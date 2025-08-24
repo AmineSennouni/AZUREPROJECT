@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "adf-mystack"
+        },
+        "LSBlobStorage_connectionString": {
+            "value": ""
+        },
+        "LS_Databricks_accessToken": {
+            "value": ""
+        },
+        "LS_Databricks_properties_typeProperties_existingClusterId": {
+            "value": "0816-114624-4qxsmldu"
+        },
+        "trigger_pipeline_properties_Pipeline_Automa_parameters_fullPathAbfss": {
+            "value": "@concat(triggerBody().folderPath, '/', triggerBody().fileName)\n\n"
+        },
+        "trigger_pipeline_properties_typeProperties_scope": {
+            "value": "/subscriptions/44f4a5b9-ef2a-43e5-8301-7feebdbde1a3/resourceGroups/rg-mystack/providers/Microsoft.Storage/storageAccounts/stmystack4858"
+        }
+    }
+}

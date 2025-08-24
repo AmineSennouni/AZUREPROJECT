@@ -1,0 +1,239 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Nom de fabrique de données",
+            "defaultValue": "adf-mystack"
+        },
+        "LSBlobStorage_connectionString": {
+            "type": "secureString",
+            "metadata": "Chaîne sécurisée pour « connectionString » de « LSBlobStorage »"
+        },
+        "LS_Databricks_accessToken": {
+            "type": "secureString",
+            "metadata": "Chaîne sécurisée pour « accessToken » de « LS_Databricks »"
+        },
+        "LS_Databricks_properties_typeProperties_existingClusterId": {
+            "type": "string",
+            "defaultValue": "0816-114624-4qxsmldu"
+        },
+        "trigger_pipeline_properties_Pipeline_Automa_parameters_fullPathAbfss": {
+            "type": "string",
+            "defaultValue": "@concat(triggerBody().folderPath, '/', triggerBody().fileName)\n\n"
+        },
+        "trigger_pipeline_properties_typeProperties_scope": {
+            "type": "string",
+            "defaultValue": "/subscriptions/44f4a5b9-ef2a-43e5-8301-7feebdbde1a3/resourceGroups/rg-mystack/providers/Microsoft.Storage/storageAccounts/stmystack4858"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/Pipeline_Automa')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Ingest_Raw",
+                        "type": "DatabricksNotebook",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "notebookPath": "/Workspace/Users/karima.aouada@gmail.com/Ingest_Raw",
+                            "baseParameters": {
+                                "fullPathAbfss": {
+                                    "value": "@concat(\n  'abfss://', pipeline().parameters.rawContainer, '@',\n  pipeline().parameters.storageAccount, '.dfs.core.windows.net/',\n  pipeline().parameters.fullPathAbfss\n)",
+                                    "type": "Expression"
+                                },
+                                "silverPath": {
+                                    "value": "@concat(\n  'abfss://', pipeline().parameters.silverContainer, '@',\n  pipeline().parameters.storageAccount, '.dfs.core.windows.net/bronze'\n)\n",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LS_Databricks",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "Clean_Data",
+                        "type": "DatabricksNotebook",
+                        "dependsOn": [
+                            {
+                                "activity": "Ingest_Raw",
+                                "dependencyConditions": [
+                                    "Completed"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "notebookPath": "/Workspace/Users/karima.aouada@gmail.com/Clean_Data",
+                            "baseParameters": {
+                                "silverPath": {
+                                    "value": "@concat(\n  'abfss://', pipeline().parameters.silverContainer, '@',\n  pipeline().parameters.storageAccount, '.dfs.core.windows.net/bronze'\n)\n",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LS_Databricks",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "Transform_curated",
+                        "type": "DatabricksNotebook",
+                        "dependsOn": [
+                            {
+                                "activity": "Clean_Data",
+                                "dependencyConditions": [
+                                    "Completed"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "notebookPath": "/Workspace/Users/karima.aouada@gmail.com/Transform_Curated",
+                            "baseParameters": {
+                                "silverPath": {
+                                    "value": "@concat(\n  'abfss://', pipeline().parameters.silverContainer, '@',\n  pipeline().parameters.storageAccount, '.dfs.core.windows.net/bronze'\n)\n",
+                                    "type": "Expression"
+                                },
+                                "goldPath": {
+                                    "value": "@concat(\n  'abfss://', pipeline().parameters.goldContainer, '@',\n  pipeline().parameters.storageAccount, '.dfs.core.windows.net/curated'\n)\n",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LS_Databricks",
+                            "type": "LinkedServiceReference"
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "parameters": {
+                    "storageAccount": {
+                        "type": "string",
+                        "defaultValue": "stmystack4858"
+                    },
+                    "rawContainer": {
+                        "type": "string",
+                        "defaultValue": "raw"
+                    },
+                    "silverContainer": {
+                        "type": "string",
+                        "defaultValue": "silver"
+                    },
+                    "goldContainer": {
+                        "type": "string",
+                        "defaultValue": "gold"
+                    },
+                    "fullPathAbfss": {
+                        "type": "string"
+                    }
+                },
+                "annotations": [],
+                "lastPublishTime": "2025-08-22T12:51:27Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_Databricks')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LSBlobStorage')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobStorage",
+                "typeProperties": {
+                    "connectionString": "[parameters('LSBlobStorage_connectionString')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_Databricks')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureDatabricks",
+                "typeProperties": {
+                    "domain": "https://adb-2334269624515681.1.azuredatabricks.net",
+                    "accessToken": {
+                        "type": "SecureString",
+                        "value": "[parameters('LS_Databricks_accessToken')]"
+                    },
+                    "existingClusterId": "[parameters('LS_Databricks_properties_typeProperties_existingClusterId')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/trigger_pipeline')]",
+            "type": "Microsoft.DataFactory/factories/triggers",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "runtimeState": "Started",
+                "pipelines": [
+                    {
+                        "pipelineReference": {
+                            "referenceName": "Pipeline_Automa",
+                            "type": "PipelineReference"
+                        },
+                        "parameters": {
+                            "fullPathAbfss": "[parameters('trigger_pipeline_properties_Pipeline_Automa_parameters_fullPathAbfss')]"
+                        }
+                    }
+                ],
+                "type": "BlobEventsTrigger",
+                "typeProperties": {
+                    "blobPathBeginsWith": "/raw/blobs/",
+                    "blobPathEndsWith": ".csv",
+                    "ignoreEmptyBlobs": true,
+                    "scope": "[parameters('trigger_pipeline_properties_typeProperties_scope')]",
+                    "events": [
+                        "Microsoft.Storage.BlobCreated",
+                        "Microsoft.Storage.BlobDeleted"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/pipelines/Pipeline_Automa')]"
+            ]
+        }
+    ]
+}
